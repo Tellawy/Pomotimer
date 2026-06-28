@@ -45,44 +45,46 @@
 
     /* ---- Card ---- */
     .card{
-      width:100%;max-width:640px;
-      background:rgba(44,44,46,0.95);
-      clip-path:url(#squircle-clip);
-      padding:40px 48px;
-      display:flex;flex-direction:column;gap:28px;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
+      width:100%;max-width:560px;
+      background:rgba(44,44,46,0.6);
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:20px;
+      padding:44px 48px;
+      display:flex;flex-direction:column;gap:0;
+      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
     }
 
     .card-header{
-      display:flex;flex-direction:column;gap:4px;
-      padding-bottom:20px;
+      display:flex;flex-direction:column;gap:6px;
+      padding-bottom:24px;
       border-bottom:1px solid rgba(255,255,255,0.08);
     }
     .card-header h2{
-      font-weight:600;font-size:22px;color:#fff;letter-spacing:0.5px;
+      font-weight:600;font-size:22px;color:#fff;letter-spacing:0.3px;
     }
     .card-header .author{
-      font-size:14px;color:#0091ff;font-weight:400;
+      font-size:15px;color:#0091ff;font-weight:400;margin-top:4px;
     }
     .card-header .email{
-      font-size:13px;color:#636366;margin-top:2px;
+      font-size:13px;color:#636366;
     }
     .card-header .email a{color:#636366;text-decoration:none;transition:color 0.2s;}
     .card-header .email a:hover{color:#0091ff;}
 
     .card-body{
       display:flex;flex-direction:column;gap:20px;
+      padding:28px 0;
     }
     .card-body p{
-      font-size:15px;color:#d1d1d6;line-height:1.7;font-weight:300;
+      font-size:15px;color:#d1d1d6;line-height:1.75;font-weight:300;
     }
+    .card-body p:first-child{color:#fff;font-weight:400;}
     .card-body strong{color:#fff;font-weight:500;}
 
     .card-footer{
-      padding-top:20px;
+      padding-top:24px;
       border-top:1px solid rgba(255,255,255,0.08);
-      display:flex;flex-direction:column;gap:8px;
+      display:flex;flex-direction:column;gap:6px;
     }
     .card-footer .sign{
       font-size:14px;color:#d1d1d6;font-weight:300;
@@ -92,15 +94,15 @@
     /* ---- Back Link ---- */
     .back-link{
       margin-top:32px;display:inline-flex;align-items:center;gap:8px;
-      padding:10px 24px;background:rgba(44,44,46,0.95);border:none;border-radius:20px;
+      padding:10px 24px;background:rgba(44,44,46,0.6);border:1px solid rgba(255,255,255,0.06);border-radius:20px;
       color:#fff;font-size:13px;font-weight:400;cursor:pointer;text-decoration:none;
-      transition:background 0.2s;
+      transition:background 0.2s;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
     }
-    .back-link:hover{background:rgba(55,55,58,0.95);}
+    .back-link:hover{background:rgba(55,55,58,0.8);}
     .back-link svg{width:14px;height:14px;color:#0091ff;}
 
     /* ---- Footer ---- */
-    .footer{margin-top:auto;padding-top:40px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;}
+    .footer{margin-top:auto;padding-top:48px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;}
     .footer-tagline{font-size:13px;color:#636366;letter-spacing:0.5px;font-style:italic;}
     .footer-madeby{font-size:12px;color:#48484a;}
     .footer-links{display:flex;gap:16px;align-items:center;}
@@ -108,10 +110,11 @@
     .footer-links a svg{width:20px;height:20px;}
     .footer-links a.fb:hover{color:#0091ff;}
     .footer-links a.yt:hover{color:#ff0000;}
+    .footer-links a.pp:hover{color:#0091ff;}
 
     /* ---- Responsive ---- */
     @media(max-width:600px){
-      .card{padding:28px 24px;}
+      .card{padding:28px 24px;border-radius:16px;}
       .card-header h2{font-size:18px;}
       .card-body p{font-size:14px;}
       .page{padding:40px 16px 24px;}
@@ -119,14 +122,6 @@
   </style>
 </head>
 <body>
-
-  <svg id="squircle-clip-svg" width="0" height="0" style="position:absolute;pointer-events:none">
-    <defs>
-      <clipPath id="squircle-clip" clipPathUnits="objectBoundingBox">
-        <path d="M 0,0.5 C 0,0.13 0.13,0 0.5,0 C 0.87,0 1,0.13 1,0.5 C 1,0.87 0.87,1 0.5,1 C 0.13,1 0,0.87 0,0.5 Z"/>
-      </clipPath>
-    </defs>
-  </svg>
 
   <div class="bg">
     <div class="bg-grid"></div>
@@ -167,6 +162,9 @@
       <div class="footer-tagline">Focus. Flow. Finish.</div>
       <div class="footer-madeby">Made by Mahmoud Tellawy</div>
       <div class="footer-links">
+        <a class="pp" href="privacy.html" aria-label="Privacy Policy">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" color="currentColor" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </a>
         <a class="fb" href="https://facebook.com/MahmoudTellawy" target="_blank" rel="noopener" aria-label="Facebook">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" color="currentColor" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2.5 12c0-4.478 0-6.718 1.391-8.109S7.521 2.5 12 2.5c4.478 0 6.718 0 8.109 1.391S21.5 7.521 21.5 12c0 4.478 0 6.718-1.391 8.109S16.479 21.5 12 21.5c-4.478 0-6.718 0-8.109-1.391S2.5 16.479 2.5 12Z"/><path d="M16.927 8.026h-2.945a1.9 1.9 0 0 0-1.9 1.886l-.086 11.515m-1.914-7.425h4.803" stroke-linecap="round"/></svg>
         </a>
