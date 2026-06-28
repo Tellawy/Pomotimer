@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pomotimer</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      background:#111113;
+      color:#fff;
+      min-height:100vh;overflow:hidden;
+      user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
+    }
+
+    /* ---- Background ---- */
+    .bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
+    .bg-grid{
+      position:absolute;inset:0;
+      background-image:radial-gradient(rgba(255,255,255,0.06) 1px,transparent 1px);
+      background-size:24px 24px;
+    }
+    .bg-blur{
+      position:absolute;inset:0;
+      background:
+        radial-gradient(ellipse 700px 500px at 25% 35%, rgba(247,37,133,0.07) 0%, transparent 100%),
+        radial-gradient(ellipse 600px 600px at 75% 65%, rgba(114,9,183,0.06) 0%, transparent 100%),
+        radial-gradient(ellipse 700px 400px at 50% 85%, rgba(67,97,238,0.06) 0%, transparent 100%),
+        radial-gradient(ellipse 500px 500px at 15% 75%, rgba(76,201,240,0.05) 0%, transparent 100%),
+        radial-gradient(ellipse 600px 400px at 85% 20%, rgba(181,23,158,0.05) 0%, transparent 100%);
+    }
+
+    /* ---- Page Layout ---- */
+    .page{
+      position:relative;z-index:1;
+      width:100vw;height:100vh;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:12px;
+    }
+
+    .logo{width:48px;height:48px;object-fit:contain;}
+    h1{font-weight:300;font-size:18px;color:#636366;letter-spacing:2px;text-transform:uppercase;margin-bottom:28px;}
+
+    /* ---- Timer Grid ---- */
+    .timer-grid{
+      display:grid;
+      grid-template-columns:repeat(4,200px);
+      gap:32px;
+      justify-content:center;
+    }
+    .timer-instance{display:flex;flex-direction:column;align-items:center;gap:12px;}
+    .timer-label{font-size:12px;color:#636366;letter-spacing:1px;text-transform:uppercase;}
+
+    /* ---- Squircle Timer (exact from app) ---- */
+    .timer{
+      width:200px;height:200px;
+      background:rgba(44,44,46,0.95);
+      position:relative;overflow:hidden;
+      display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+      clip-path:url(#squircle-clip);
+      padding:19px 0;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    /* ---- Icon Row (exact from app) ---- */
+    .icon-row{display:flex;align-items:center;justify-content:center;gap:15px;z-index:2;width:100%;}
+    .icon-slot{width:22px;height:22px;display:flex;align-items:center;justify-content:center;}
+    .icon-slot svg{width:20px;height:20px;color:#8e8e93;}
+    .icon-slot.large svg{width:22px;height:22px;}
+    .icon-slot.active svg{color:#0091ff;}
+    .icon-slot.muted svg{color:#8e8e93;}
+    .icon-slot.empty{width:22px;height:22px;}
+
+    /* ---- Rings (exact from app) ---- */
+    .ring-svg,.wheel-svg{position:absolute;top:16px;left:16px;padding:38px;pointer-events:none;}
+    .wheel-svg{pointer-events:auto;}
+    .ring-track,.playback-ring-track{fill:none;stroke:rgba(255,255,255,0.08);stroke-width:4;}
+    .ring-progress{fill:none;stroke:#0091ff;stroke-width:4;stroke-linecap:round;}
+    .playback-ring-segment{fill:none;stroke-width:4;}
+    .playback-ring-segment.completed{opacity:0.9;}
+
+    /* ---- Time Display (exact from app) ---- */
+    .time-display{
+      position:absolute;top:74px;left:0;width:200px;
+      text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;z-index:2;
+    }
+    .time-main{font-weight:100;font-size:28px;color:#fff;line-height:1;}
+    .time-seconds{font-weight:100;font-size:18px;color:#ccc;line-height:1;}
+
+    /* ---- Completion Overlay (exact from app) ---- */
+    .completion-overlay{
+      position:absolute;top:62px;left:62px;width:76px;height:76px;
+      border-radius:50%;background:rgba(44,44,46,0.55);
+      display:flex;align-items:center;justify-content:center;z-index:3;
+    }
+    .completion-overlay svg{width:44px;height:44px;color:#0091ff;}
+
+    /* ---- CTA ---- */
+    .cta{
+      margin-top:28px;display:inline-flex;align-items:center;gap:8px;
+      padding:12px 28px;background:rgba(44,44,46,0.95);border:none;border-radius:20px;
+      color:#fff;font-size:14px;font-weight:400;cursor:pointer;text-decoration:none;
+      transition:background 0.2s;
+    }
+    .cta:hover{background:rgba(55,55,58,0.95);}
+    .cta svg{width:16px;height:16px;color:#0091ff;}
+
+    /* ---- Footer ---- */
+    .footer{margin-top:32px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;}
+    .footer-tagline{font-size:13px;color:#636366;letter-spacing:0.5px;font-style:italic;}
+    .footer-madeby{font-size:12px;color:#48484a;}
+    .footer-links{display:flex;gap:16px;align-items:center;}
+    .footer-links a{color:#636366;transition:color 0.2s;display:flex;align-items:center;text-decoration:none;}
+    .footer-links a svg{width:20px;height:20px;}
+    .footer-links a.fb:hover{color:#0091ff;}
+    .footer-links a.yt:hover{color:#ff0000;}
+
+    /* ---- 2x2 Grid ---- */
+    @media(max-width:960px){
+      .timer-grid{grid-template-columns:repeat(2,200px);gap:24px;}
+    }
+    @media(max-width:480px){
+      .timer-grid{grid-template-columns:repeat(2,1fr);max-width:440px;gap:12px;}
+      .timer{transform:scale(0.78);transform-origin:center;}
+      .timer-instance{margin:-16px -10px;}
+      h1{font-size:14px;margin-bottom:16px;}
+      .timer-label{font-size:10px;}
+      .cta{margin-top:16px;padding:10px 22px;font-size:13px;}
+      .page{gap:4px;}
+    }
+    @media(max-height:700px){
+      .timer{transform:scale(0.8);transform-origin:center;}
+      .timer-instance{margin:-10px -8px;}
+      h1{margin-bottom:12px;}
+      .page{gap:4px;}
+    }
+    @media(max-height:560px){
+      .timer{transform:scale(0.6);transform-origin:center;}
+      .timer-instance{margin:-24px -20px;}
+      h1{font-size:13px;margin-bottom:4px;}
+      .logo{width:36px;height:36px;}
+      .page{gap:0;}
+      .footer{margin-top:12px;}
+    }
+  </style>
+</head>
+<body>
+
+  <svg id="squircle-clip-svg" width="0" height="0" style="position:absolute;pointer-events:none">
+    <defs>
+      <clipPath id="squircle-clip" clipPathUnits="objectBoundingBox">
+        <path d="M 0,0.5 C 0,0.13 0.13,0 0.5,0 C 0.87,0 1,0.13 1,0.5 C 1,0.87 0.87,1 0.5,1 C 0.13,1 0,0.87 0,0.5 Z"/>
+      </clipPath>
+    </defs>
+  </svg>
+
+  <div class="bg">
+    <div class="bg-grid"></div>
+    <div class="bg-blur"></div>
+  </div>
+
+  <div class="page">
+    <img src="PomotimerLogo.png" alt="Pomotimer" class="logo">
+    <h1>Pomotimer</h1>
+
+    <div class="timer-grid">
+
+      <!-- ============ PAGE 1: Clock / Home ============ -->
+      <div class="timer-instance">
+        <div class="timer-label">Clock</div>
+        <div class="timer">
+          <div class="icon-row">
+            <div class="icon-slot muted"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18m12 0L6 6"></path></svg></div>
+            <div class="icon-slot empty"></div>
+            <div class="icon-slot empty"></div>
+          </div>
+          <svg class="ring-svg" width="168" height="168" viewBox="0 0 168 168">
+            <circle class="ring-track" cx="84" cy="84" r="80"></circle>
+            <circle class="ring-progress" cx="84" cy="84" r="80" stroke-dasharray="502.65" stroke-dashoffset="0" transform="rotate(-90 84 84)"></circle>
+          </svg>
+          <div class="time-display">
+            <div class="time-main" id="clock-main">00:00</div>
+            <div class="time-seconds" id="clock-sec">00</div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-slot empty"></div>
+            <div class="icon-slot muted large"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.79 9.152C21.598 10.542 22 11.237 22 12s-.403 1.458-1.21 2.848l-1.923 3.316c-.803 1.384-1.205 2.076-1.865 2.456s-1.462.38-3.065.38h-3.874c-1.603 0-2.405 0-3.065-.38s-1.062-1.072-1.865-2.456L3.21 14.848C2.403 13.458 2 12.763 2 12s.403-1.458 1.21-2.848l1.923-3.316C5.936 4.452 6.338 3.76 6.998 3.38S8.46 3 10.063 3h3.874c1.603 0 2.405 0 3.065.38s1.062 1.072 1.865 2.456z"></path><path d="m9 8 6 8" stroke-linecap="round"></path></svg></div>
+            <div class="icon-slot empty"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ PAGE 2: Session Config ============ -->
+      <div class="timer-instance">
+        <div class="timer-label">Sessions</div>
+        <div class="timer">
+          <div class="icon-row">
+            <div class="icon-slot muted"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6s-6 4.419-6 6 6 6 6 6"></path></svg></div>
+            <div class="icon-slot empty"></div>
+            <div class="icon-slot large"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" color="currentColor" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16m8-8H4"/></svg></div>
+          </div>
+          <svg class="wheel-svg" width="168" height="168" viewBox="0 0 168 168">
+            <path d="M84,84 L84,4 A80,80 0 0,1 162.0,101.8 Z" fill="#f72585"></path>
+            <path d="M84,84 L162.0,101.8 A80,80 0 0,1 146.5,133.9 Z" fill="#7209b7"></path>
+            <path d="M84,84 L146.5,133.9 A80,80 0 0,1 21.5,133.9 Z" fill="#4361ee"></path>
+            <path d="M84,84 L21.5,133.9 A80,80 0 0,1 6.0,101.8 Z" fill="#4cc9f0"></path>
+            <path d="M84,84 L6.0,101.8 A80,80 0 0,1 84,4 Z" fill="#b5179e"></path>
+          </svg>
+          <div class="icon-row">
+            <div class="icon-slot muted large"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9s-4.419 6-6 6-6-6-6-6"></path></svg></div>
+            <div class="icon-slot muted large"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15s-4.42-6-6-6-6 6-6 6"></path></svg></div>
+            <div class="icon-slot active large"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13.26 2.586 2.697C8.252 16.652 8.586 17 9 17s.748-.348 1.414-1.043L19 7"></path></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ PAGE 3: Active Playback ============ -->
+      <div class="timer-instance">
+        <div class="timer-label">Active</div>
+        <div class="timer">
+          <div class="icon-row">
+            <div class="icon-slot muted"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6s-6 4.419-6 6 6 6 6 6"></path></svg></div>
+            <div class="icon-slot empty"></div>
+            <div class="icon-slot empty"></div>
+          </div>
+          <svg class="ring-svg" width="168" height="168" viewBox="0 0 168 168" id="playback-rings">
+            <circle class="playback-ring-track" cx="84" cy="84" r="80" stroke-dasharray="502.65" stroke-dashoffset="0" transform="rotate(-90 84 84)"></circle>
+            <circle class="playback-ring-segment completed" cx="84" cy="84" r="80" stroke="#f72585" stroke-dasharray="143.61 359.04" stroke-dashoffset="0" transform="rotate(-90 84 84)"></circle>
+            <circle class="playback-ring-segment completed" cx="84" cy="84" r="80" stroke="#7209b7" stroke-dasharray="35.90 466.75" stroke-dashoffset="-143.61" transform="rotate(-90 84 84)"></circle>
+            <circle class="playback-ring-segment" cx="84" cy="84" r="80" stroke="#4361ee" stroke-dasharray="47.87 454.78" stroke-dashoffset="-179.51" transform="rotate(-90 84 84)"></circle>
+          </svg>
+          <div class="time-display">
+            <div class="time-main" id="play-main">14</div>
+            <div class="time-seconds" id="play-sec">38</div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-slot play-pause-active large"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7c0-1.414 0-2.121.44-2.56C4.878 4 5.585 4 7 4s2.121 0 2.56.44C10 4.878 10 5.585 10 7v10c0 1.414 0 2.121-.44 2.56C9.122 20 8.415 20 7 20s-2.121 0-2.56-.44C4 19.122 4 18.415 4 17zm10 0c0-1.414 0-2.121.44-2.56C14.878 4 15.585 4 17 4s2.121 0 2.56.44C20 4.878 20 5.585 20 7v10c0 1.414 0 2.121-.44 2.56-.439.44-1.146.44-2.56.44s-2.121 0-2.56-.44C14 19.122 14 18.415 14 17z"></path></svg></div>
+            <div class="icon-slot muted large"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12c0-3.28 0-4.919.814-6.081a4.5 4.5 0 0 1 1.105-1.105C7.08 4 8.72 4 12 4s4.919 0 6.081.814a4.5 4.5 0 0 1 1.105 1.105C20 7.08 20 8.72 20 12s0 4.919-.814 6.081a4.5 4.5 0 0 1-1.105 1.105C16.92 20 15.28 20 12 20s-4.919 0-6.081-.814a4.5 4.5 0 0 1-1.105-1.105C4 16.92 4 15.28 4 12Z"></path></svg></div>
+            <div class="icon-slot muted large"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.79 9.152C21.598 10.542 22 11.237 22 12s-.403 1.458-1.21 2.848l-1.923 3.316c-.803 1.384-1.205 2.076-1.865 2.456s-1.462.38-3.065.38h-3.874c-1.603 0-2.405 0-3.065-.38s-1.062-1.072-1.865-2.456L3.21 14.848C2.403 13.458 2 12.763 2 12s.403-1.458 1.21-2.848l1.923-3.316C5.936 4.452 6.338 3.76 6.998 3.38S8.46 3 10.063 3h3.874c1.603 0 2.405 0 3.065.38s1.062 1.072 1.865 2.456z"></path><path d="m9 8 6 8" stroke-linecap="round"></path></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ PAGE 4: Completion ============ -->
+      <div class="timer-instance">
+        <div class="timer-label">Complete</div>
+        <div class="timer">
+          <div class="icon-row">
+            <div class="icon-slot empty"></div>
+            <div class="icon-slot empty"></div>
+            <div class="icon-slot empty"></div>
+          </div>
+          <svg class="ring-svg" width="168" height="168" viewBox="0 0 168 168" id="playback-rings-done">
+            <circle class="playback-ring-track" cx="84" cy="84" r="80" stroke-dasharray="502.65" stroke-dashoffset="0" transform="rotate(-90 84 84)"></circle>
+            <circle class="playback-ring-segment completed" cx="84" cy="84" r="80" stroke="#f72585" stroke-dasharray="143.61 359.04" stroke-dashoffset="0" transform="rotate(-90 84 84)"></circle>
+            <circle class="playback-ring-segment completed" cx="84" cy="84" r="80" stroke="#7209b7" stroke-dasharray="35.90 466.75" stroke-dashoffset="-143.61" transform="rotate(-90 84 84)"></circle>
+            <circle class="playback-ring-segment completed" cx="84" cy="84" r="80" stroke="#4361ee" stroke-dasharray="143.61 359.04" stroke-dashoffset="-179.51" transform="rotate(-90 84 84)"></circle>
+            <circle class="playback-ring-segment completed" cx="84" cy="84" r="80" stroke="#4cc9f0" stroke-dasharray="35.90 466.75" stroke-dashoffset="-323.12" transform="rotate(-90 84 84)"></circle>
+            <circle class="playback-ring-segment completed" cx="84" cy="84" r="80" stroke="#b5179e" stroke-dasharray="143.61 359.04" stroke-dashoffset="-359.02" transform="rotate(-90 84 84)"></circle>
+          </svg>
+          <div class="completion-overlay">
+            <div class="completion-checkmark"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" color="currentColor" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13.26 2.586 2.697C8.252 16.652 8.586 17 9 17s.748-.348 1.414-1.043L19 7"/></svg></div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-slot empty"></div>
+            <div class="icon-slot empty"></div>
+            <div class="icon-slot empty"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <a href="https://apps.microsoft.com" class="cta" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8.5v8.5H3V3zm9.5 0H21v8.5h-8.5V3zM3 12.5h8.5V21H3v-8.5zm9.5 0H21V21h-8.5v-8.5z"/></svg>
+      Get Pomotimer
+    </a>
+
+    <div class="footer">
+      <div class="footer-tagline">Focus. Flow. Finish.</div>
+      <div class="footer-madeby">Made by Mahmoud Tellawy</div>
+      <div class="footer-links">
+        <a class="fb" href="https://facebook.com/MahmoudTellawy" target="_blank" rel="noopener" aria-label="Facebook">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" color="currentColor" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2.5 12c0-4.478 0-6.718 1.391-8.109S7.521 2.5 12 2.5c4.478 0 6.718 0 8.109 1.391S21.5 7.521 21.5 12c0 4.478 0 6.718-1.391 8.109S16.479 21.5 12 21.5c-4.478 0-6.718 0-8.109-1.391S2.5 16.479 2.5 12Z"/><path d="M16.927 8.026h-2.945a1.9 1.9 0 0 0-1.9 1.886l-.086 11.515m-1.914-7.425h4.803" stroke-linecap="round"/></svg>
+        </a>
+        <a class="yt" href="https://youtube.com/@MahmoudTellawy" target="_blank" rel="noopener" aria-label="YouTube">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" color="currentColor" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20.5c1.81 0 3.545-.179 5.153-.507 2.01-.41 3.014-.614 3.93-1.792.917-1.179.917-2.532.917-5.238v-1.926c0-2.706 0-4.06-.917-5.238-.916-1.178-1.92-1.383-3.93-1.792A26 26 0 0 0 12 3.5c-1.81 0-3.545.179-5.153.507-2.01.41-3.014.614-3.93 1.792C2 6.978 2 8.331 2 11.037v1.926c0 2.706 0 4.06.917 5.238.916 1.178 1.92 1.383 3.93 1.792 1.608.328 3.343.507 5.153.507Z"/><path d="M15.962 12.313c-.148.606-.938 1.04-2.517 1.911-1.718.947-2.577 1.42-3.272 1.237a1.7 1.7 0 0 1-.635-.317C9 14.709 9 13.806 9 12s0-2.709.538-3.144c.182-.147.4-.256.635-.317.695-.183 1.554.29 3.272 1.237 1.58.87 2.369 1.305 2.517 1.911.05.206.05.42 0 .626Z" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Live clock (exact from app: updateClockDisplay)
+    (function(){
+      var cm=document.getElementById('clock-main');
+      var cs=document.getElementById('clock-sec');
+      var rp=document.querySelector('#page1 .ring-progress');
+      function tick(){
+        var n=new Date();
+        var hh=n.getHours().toString().padStart(2,'0');
+        var mm=n.getMinutes().toString().padStart(2,'0');
+        var ss=n.getSeconds().toString().padStart(2,'0');
+        if(cm)cm.textContent=hh+':'+mm;
+        if(cs)cs.textContent=ss;
+        var total=n.getMinutes()*60+n.getSeconds();
+        var offset=502.65*(1-total/3600);
+        var prog=document.querySelector('.ring-progress');
+        if(prog)prog.setAttribute('stroke-dashoffset',offset);
+      }
+      tick();setInterval(tick,1000);
+    })();
+
+    // Block zoom
+    document.addEventListener('wheel',function(e){if(e.ctrlKey)e.preventDefault();},{passive:false,capture:true});
+    document.addEventListener('keydown',function(e){
+      if((e.ctrlKey||e.metaKey)&&(e.key==='+'||e.key==='-'||e.key==='='||e.key==='0'))e.preventDefault();
+      if(e.key==='F12'){e.preventDefault();return false;}
+      if(e.ctrlKey&&e.shiftKey&&'IiJjCc'.indexOf(e.key)!==-1){e.preventDefault();return false;}
+      if(e.ctrlKey&&e.key==='U'){e.preventDefault();return false;}
+    },true);
+    document.addEventListener('contextmenu',function(e){e.preventDefault();},true);
+    document.addEventListener('selectstart',function(e){e.preventDefault();},true);
+    document.addEventListener('copy',function(e){e.preventDefault();},true);
+    document.addEventListener('cut',function(e){e.preventDefault();},true);
+    document.addEventListener('dragstart',function(e){e.preventDefault();},true);
+  </script>
+</body>
+</html>
